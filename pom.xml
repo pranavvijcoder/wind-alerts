@@ -75,7 +75,6 @@
         <dependency>
             <groupId>com.jmethods</groupId>
             <artifactId>catatumbo</artifactId>
-            <!-- Use the latest version or change it to the desired version -->
             <version>2.7.0</version>
         </dependency>
         <!-- Test -->

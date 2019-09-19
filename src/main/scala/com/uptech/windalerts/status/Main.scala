@@ -1,30 +1,7 @@
 package com.uptech.windalerts.status
 
-import cats.implicits._
-import com.jmethods.catatumbo.EntityManagerFactory
-
 import scala.util.Try
-// import cats.implicits._
-
-import org.http4s.server.blaze._
-// import org.http4s.server.blaze._
-
-import org.http4s.implicits._
-// import org.http4s.implicits._
-
-import org.http4s.server.Router
-import cats.effect.{IO, _}
-import cats.implicits._
-import com.uptech.windalerts.domain.Domain.BeachId
-import org.http4s.HttpRoutes
-import org.http4s.dsl.impl.Root
-import org.http4s.dsl.io._
-import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
-import com.uptech.windalerts.domain.DomainCodec._
-import com.uptech.windalerts.domain.DomainCodec._
-import cats.implicits._
-import java.io.{File, FileInputStream, InputStream}
+import java.io.FileInputStream
 
 import cats.effect.{IO, _}
 import cats.implicits._
@@ -32,8 +9,11 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
+import com.jmethods.catatumbo.EntityManagerFactory
+import com.uptech.windalerts.alerts.Alerts
 import com.uptech.windalerts.domain.Domain
 import com.uptech.windalerts.domain.Domain.BeachId
+import com.uptech.windalerts.users.Users
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -41,27 +21,10 @@ import org.http4s.headers.Authorization
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import com.uptech.windalerts.users.Users
-import java.util
-import java.util.Date
-
-import cats.effect.IO
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.firestore.{DocumentReference, Firestore}
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.cloud.FirestoreClient
-import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.alerts.Alerts
-import com.uptech.windalerts.domain.Domain.{Alert, AlertBean}
-
-import scala.collection.JavaConverters
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
 
 object Main extends IOApp {
 
-  import com.uptech.windalerts.domain.DomainCodec._
   import com.uptech.windalerts.domain.DomainCodec._
 
   private val logger = getLogger
@@ -76,12 +39,14 @@ object Main extends IOApp {
     _ <- IO(FirebaseApp.initializeApp(options))
     db <- IO(FirestoreClient.getFirestore)
     auth <- IO(FirebaseAuth.getInstance)
-  } yield (db, auth)
+    emf <- IO(EntityManagerFactory.getInstance)
+    em <- IO(emf.createDefaultEntityManager())
+  } yield (db, auth, em)
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
-  val alerts = new Alerts.FireStoreBackedService(dbWithAuth._1)
+  val alerts = new Alerts.FireStoreBackedService(dbWithAuth._3)
   val users = new Users.FireStoreBackedService(dbWithAuth._2)
 
   def sendAlertsRoute(A: Alerts.Service, B: Beaches.Service, U : Users.Service) = HttpRoutes.of[IO] {
@@ -128,10 +93,6 @@ object Main extends IOApp {
     }
   }
 
-  private def  toEither[T](ox: Option[T]) : Either[String, T] = {
-    if (ox.isDefined) Right(ox.get) else Left("No number")
-
-  }
 
 
   def run(args: List[String]): IO[ExitCode] = {

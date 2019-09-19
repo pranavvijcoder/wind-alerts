@@ -3,6 +3,8 @@ package com.uptech.windalerts.domain
 import java.util
 import java.util.UUID
 
+import com.jmethods.catatumbo.{Embeddable, Entity, Identifier, Property}
+
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
@@ -19,22 +21,9 @@ object Domain {
   final case class Tide(height: TideHeight, swell: Swell)
   final case class Beach(wind: Wind, tide: Tide)
 
-  case class TimeRange(from: Int, to: Int) {
-    def isWithinRange(hour: Int) = from <= hour && to > hour
+  case class TimeRange(from:Int, to:Int) {
+    def isWithinRange(hour: Long) = from <= hour && to > hour
   }
-
-  object TimeRange {
-    def unapply(values: Map[String, Long]) = try {
-      Some(new TimeRange(values("from").toInt, values("to").toInt))
-    }
-    catch {
-      case NonFatal(ex) => {
-        ex.printStackTrace
-        None
-      }
-    }
-  }
-
   case class AlertRequest(
                            beachId: Long,
                            days: Seq[Long],
@@ -66,18 +55,23 @@ object Domain {
 
     def isToBeAlertedAt(hour: Int) = timeRanges.exists(_.isWithinRange(hour))
 
-    def toBean: AlertBean = {
-      val alert = new AlertBean(
-        "",
+    def toBean: AlertBean2 = {
+      val alert = new AlertBean2(
         owner,
         beachId,
         new java.util.ArrayList(JavaConverters.asJavaCollection(days)),
         new java.util.ArrayList(JavaConverters.asJavaCollection(swellDirections)),
-        new java.util.ArrayList(JavaConverters.asJavaCollection(timeRanges)),
+        new java.util.ArrayList(JavaConverters.asJavaCollection(timeRanges.map(t=>{
+          val tr = new TimeRange2()
+          tr.from = t.from
+          tr.to = t.to
+          tr
+        }))),
         waveHeightFrom,
         waveHeightTo,
         new java.util.ArrayList(JavaConverters.asJavaCollection(windDirections)),
         timeZone)
+
       alert
     }
   }
@@ -96,52 +90,42 @@ object Domain {
         alertRequest.waveHeightTo,
         alertRequest.windDirections,
         alertRequest.timeZone)
-
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
-      val values = tuple._2
-      println(values)
-      Some(Alert(
-        tuple._1,
-        values("owner").asInstanceOf[String],
-        values("beachId").asInstanceOf[Long].toLong,
-        j2s(values("days").asInstanceOf[util.ArrayList[Long]]).asInstanceOf[Seq[Long]],
-        j2s(values("swellDirections").asInstanceOf[util.ArrayList[String]]),
-        {
-          val ranges = j2s(values("timeRanges").asInstanceOf[util.ArrayList[util.HashMap[String, Long]]]).map(p => j2sm(p))
-            .map(r => {
-              val TimeRange(tr) = r
-              tr
-            })
-          ranges
-        },
-        values("waveHeightFrom").asInstanceOf[Number].doubleValue(),
-        values("waveHeightTo").asInstanceOf[Number].doubleValue(),
-        j2s(values("windDirections").asInstanceOf[util.ArrayList[String]]),
-        values.get("timeZone").getOrElse("Australia/Sydney").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(ex) => {
-        println(ex)
-        None
-      }
-    }
-
-
   }
 
-  class AlertBean(
-                   @BeanProperty var id: String,
-                   @BeanProperty var owner: String,
-                   @BeanProperty var beachId: Long,
-                   @BeanProperty var days: java.util.List[Long],
-                   @BeanProperty var swellDirections: java.util.List[String],
-                   @BeanProperty var timeRanges: java.util.List[TimeRange],
-                   @BeanProperty var waveHeightFrom: Double,
-                   @BeanProperty var waveHeightTo: Double,
-                   @BeanProperty var windDirections: java.util.List[String],
-                   @BeanProperty var timeZone: String ="Australia/Sydney") {}
+  @Embeddable
+  class TimeRange2() {
+    @Property @BeanProperty var from: Int = 0
+    @Property @BeanProperty var to: Int = 0
 
+    def isWithinRange(hour: Long) = from <= hour && to > hour
+  }
+
+  @Entity(kind = "alerts")
+  class AlertBean2(
+                    @Property(name = "owner") @BeanProperty var owner: String,
+                    @Property(name = "beachId") @BeanProperty var beachId: Long,
+                    @BeanProperty var days: java.util.List[Long],
+                    @BeanProperty var swellDirections: java.util.List[String],
+                    @BeanProperty  var timeRanges: java.util.List[TimeRange2],
+                    @BeanProperty var waveHeightFrom: Double,
+                    @BeanProperty var waveHeightTo: Double,
+                    @BeanProperty var windDirections: java.util.List[String],
+                    @BeanProperty var timeZone: String = "Australia/Sydney") {
+    @Identifier var id: String = _
+
+    def this() = this(null, 0, null, null, null, 0, 0, null, null)
+
+    def getId = id
+
+    def setId(id: String): Unit = this.id = id
+//
+//    def getOwner = owner
+//
+//    def setOwner(owner: String): Unit = this.owner = owner
+
+    def toAlert :Alert = Alert(id, owner, beachId, j2s(days), j2s(swellDirections), j2s(timeRanges).map(t=>new TimeRange(t.from, t.to)), waveHeightFrom, waveHeightTo, j2s(windDirections), timeZone)
+
+  }
 
 
   def j2s[A](inputList: util.List[A]) = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
