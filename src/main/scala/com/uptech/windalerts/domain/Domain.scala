@@ -33,12 +33,12 @@ object Domain {
 
   final case class AlertWithUser(alert: Alert, user:User)
 
-  case class RegisterRequest(email: String, name: String, password: String)
+  final case class DeviceRequest(deviceId: String)
 
-  final case class UserWithCredentials(uid:String, email:String, password:String, token:String)
-  final case class DeviceRequest(deviceId:String)
-  final case class UserDevices(devices:Seq[UserDevice])
-  final case class UserDevice(deviceId:String, ownerId:String)
+  final case class UserDevices(devices: Seq[UserDevice])
+
+  final case class UserDevice(deviceId: String, ownerId: String)
+
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
       val values = tuple._2

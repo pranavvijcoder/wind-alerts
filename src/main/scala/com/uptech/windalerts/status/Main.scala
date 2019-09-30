@@ -1,10 +1,7 @@
 package com.uptech.windalerts.status
 
 import java.io.FileInputStream
-import java.time.Instant
 
-import cats.data.{EitherT, Kleisli, OptionT}
-import org.http4s.server._
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -17,23 +14,14 @@ import com.uptech.windalerts.domain.{Domain, HttpErrorHandler}
 import com.uptech.windalerts.domain.Domain.BeachId
 import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
 import org.http4s.HttpRoutes
-
-import com.uptech.windalerts.alerts.{Alerts, AlertsRepository}
-import com.uptech.windalerts.domain.Domain
-import com.uptech.windalerts.domain.Domain.{BeachId, User}
-import com.uptech.windalerts.users.{Devices, Users}
-import org.http4s.{AuthedRoutes, AuthedService, HttpRoutes, HttpService, Request}
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
 import org.http4s.headers.Authorization
 import org.http4s.implicits._
-import org.http4s.server.AuthMiddleware
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 import com.uptech.windalerts.domain.DomainCodec._
 import com.uptech.windalerts.domain.Errors.HeaderNotPresent
-import tsec.authentication.TSecBearerToken
-import tsec.common.SecureRandomId
 
 import scala.util.Try
 
@@ -149,19 +137,11 @@ object Main extends IOApp {
   }.orNotFound
 
 
-
-  def routes(implicit timer: Timer[IO]): HttpRoutes[IO] =
-    Router[IO](
-      "" -> jwtStatefulExample.routes,
-      "/auth" -> jwtStatefulExample.service
-    )
-
   def run(args: List[String]): IO[ExitCode] = {
+
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-//      .withHttpApp(allRoutes(alerts, beaches, users, devices, usersRepo, dbWithAuth._3, httpErrorHandler))
-    .withHttpApp(routes.orNotFound)
-
+      .withHttpApp(allRoutes(alerts, beaches, users, devices, usersRepo, dbWithAuth._3, httpErrorHandler))
       .serve
       .compile
       .drain
