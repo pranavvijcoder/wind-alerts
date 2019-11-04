@@ -15,7 +15,19 @@
         <envProjectId>wind-alerts-staging</envProjectId>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>oss.sonatype.org</id>
+            <name>sonatype sapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
     <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.12.6</version>
+        </dependency>
         <dependency>
             <groupId>org.typelevel</groupId>
             <artifactId>cats-core_2.12</artifactId>
@@ -196,6 +208,13 @@
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
                                 <arg>-Ypartial-unification</arg>
                             </args>
+                            <compilerPlugins>
+                                <compilerPlugin>
+                                    <groupId>org.scalamacros</groupId>
+                                    <artifactId>paradise_2.12.6</artifactId>
+                                    <version>2.1.1</version>
+                                </compilerPlugin>
+                            </compilerPlugins>
                         </configuration>
                     </execution>
                 </executions>
@@ -238,6 +257,7 @@
             </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>status</id>

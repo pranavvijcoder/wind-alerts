@@ -2,6 +2,8 @@ package com.uptech.windalerts.status
 
 import cats.effect.{IO, _}
 import cats.implicits._
+import io.circe.generic.JsonCodec, io.circe.syntax._
+
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.BeachId
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}

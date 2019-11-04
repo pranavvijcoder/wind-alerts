@@ -1,7 +1,10 @@
 package com.uptech.windalerts.domain
 
 import java.util
+import io.circe.generic.JsonCodec, io.circe.syntax._
+import io.circe.generic.auto._, io.circe.syntax._
 
+import io.circe.generic.JsonCodec
 import org.log4s.getLogger
 
 import scala.beans.BeanProperty
@@ -42,7 +45,7 @@ object domain {
     }
   }
 
-  case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)
+  @JsonCodec case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)
   object FacebookCredentials {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
       val values = tuple._2
@@ -59,7 +62,7 @@ object domain {
     }
   }
 
-  case class Credentials(id: Option[String], email: String, password: String, deviceType: String)
+  @JsonCodec case class Credentials(id: Option[String], email: String, password: String, deviceType: String)
 
   object Credentials {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
@@ -99,7 +102,7 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill:Long) {
+  @JsonCodec final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill:Long) {
     def isTrialEnded() = {
       startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
     }
@@ -126,23 +129,23 @@ object domain {
     }
   }
 
-  final case class AlertWithUser(alert: Alert, user: User)
+  @JsonCodec final case class AlertWithUser(alert: Alert, user: User)
 
-  final case class DeviceRequest(deviceId: String)
+  @JsonCodec final case class DeviceRequest(deviceId: String)
 
-  final case class UserDevices(devices: Seq[UserDevice])
+  @JsonCodec final case class UserDevices(devices: Seq[UserDevice])
 
-  final case class UserDevice(deviceId: String, ownerId: String)
+  @JsonCodec final case class UserDevice(deviceId: String, ownerId: String)
 
-  case class FacebookRegisterRequest(accessToken:String, deviceId: String, deviceType: String, deviceToken: String)
+  @JsonCodec case class FacebookRegisterRequest(accessToken:String, deviceId: String, deviceType: String, deviceToken: String)
 
-  case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
+  @JsonCodec case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
 
-  case class FacebookLoginRequest(accessToken:String, deviceType: String, deviceToken: String)
+  @JsonCodec case class FacebookLoginRequest(accessToken:String, deviceType: String, deviceToken: String)
 
-  case class LoginRequest(email: String, password: String, deviceType: String, deviceToken: String)
+  @JsonCodec case class LoginRequest(email: String, password: String, deviceType: String, deviceToken: String)
 
-  case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
+  @JsonCodec case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
 
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
@@ -157,22 +160,22 @@ object domain {
     }
   }
 
-  final case class BeachId(id: Int) extends AnyVal
+  @JsonCodec final case class BeachId(id: Int) extends AnyVal
 
-  final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String)
+  @JsonCodec final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String)
 
-  final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
+  @JsonCodec final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
 
-  final case class TideHeight(height:Double, status: String, nextLow:Long, nextHigh:Long)
+  @JsonCodec final case class TideHeight(height:Double, status: String, nextLow:Long, nextHigh:Long)
 
-  final case class TideHeightOutput(status:String)
-  final case class SwellOutput(height: Double = 0, direction: Double = 0, directionText: String, nextLow:Long, nextHigh:Long)
+  @JsonCodec final case class TideHeightOutput(status:String)
+  @JsonCodec final case class SwellOutput(height: Double = 0, direction: Double = 0, directionText: String, nextLow:Long, nextHigh:Long)
 
-  final case class Tide(height: TideHeightOutput, swell: SwellOutput)
+  @JsonCodec final case class Tide(height: TideHeightOutput, swell: SwellOutput)
 
-  final case class Beach(wind: Wind, tide: Tide)
+  @JsonCodec final case class Beach(wind: Wind, tide: Tide)
 
-  case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
+  @JsonCodec case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
     def isWithinRange(hourAndMinutes: Int): Boolean = from <= hourAndMinutes && to > hourAndMinutes
   }
 
@@ -185,7 +188,7 @@ object domain {
     }
   }
 
-  case class AlertRequest(
+  @JsonCodec case class AlertRequest(
                            beachId: Long,
                            days: Seq[Long],
                            swellDirections: Seq[String],
@@ -199,7 +202,7 @@ object domain {
 
   case class Alerts(alerts: Seq[Alert])
 
-  case class Alert(
+  @JsonCodec final case class Alert(
                     id: String,
                     owner: String,
                     beachId: Long,
