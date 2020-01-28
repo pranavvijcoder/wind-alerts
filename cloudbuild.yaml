@@ -5,7 +5,7 @@ steps:
       - 'decrypt'
       - '--ciphertext-file=src/main/resources/$PROJECT_ID.secrets.enc'
       - '--plaintext-file=src/main/resources/$PROJECT_ID.secrets'
-      - '--location=global'
+        - '--location=global'
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
   - name: 'gcr.io/cloud-builders/gcloud'

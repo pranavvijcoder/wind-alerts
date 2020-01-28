@@ -20,8 +20,8 @@ object swellAdjustments {
     def adjust(height: Double): Double = {
       height *
         adjustments
-        .filter(adjustment => adjustment.from <= height && adjustment.to >= height)
-        .headOption.map(_.factor).getOrElse(1.0)
+          .filter(adjustment => adjustment.from <= height && adjustment.to >= height)
+          .headOption.map(_.factor).getOrElse(1.0)
     }
 
   }
@@ -78,7 +78,13 @@ object config {
 
   case class AppConfig(surfsUp: SurfsUp)
 
+<<<<<<< Updated upstream
   case class SurfsUp(notifications: Notifications)
+=======
+  case class SurfsUp(urls: Urls, notifications: Notifications)
+
+  case class Urls(baseUrl: String, appleVerificationUrl: String)
+>>>>>>> Stashed changes
 
   case class Notifications(title: String, body: String)
 
