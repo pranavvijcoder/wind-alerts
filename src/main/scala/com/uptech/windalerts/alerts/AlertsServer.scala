@@ -38,7 +38,7 @@ object AlertsServer extends IOApp {
       alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
       alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
       alertService <- IO(new AlertsService.ServiceImpl(alertsRepository))
-      auth <- IO(new Auth(refreshTokensRepo))
+      auth <- IO(new Auth[IO](refreshTokensRepo))
       usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
       httpApp <- IO(Router(

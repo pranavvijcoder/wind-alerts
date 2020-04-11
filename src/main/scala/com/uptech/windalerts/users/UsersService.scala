@@ -2,17 +2,18 @@ package com.uptech.windalerts.users
 
 import cats.Functor
 import cats.data._
-import cats.effect.IO
+import cats.effect.{Async, ConcurrentEffect, IO}
 import cats.syntax.functor._
 import com.github.t3hnar.bcrypt._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
-import com.uptech.windalerts.alerts.{AlertsRepositoryT}
+import com.uptech.windalerts.alerts.AlertsRepositoryT
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
 import org.mongodb.scala.bson.ObjectId
+import org.http4s.implicits._
 
-class UserService(userRepo: UserRepositoryAlgebra,
+class UserService[F[_] : ConcurrentEffect](userRepo: UserRepositoryAlgebra,
                   credentialsRepo: CredentialsRepositoryAlgebra,
                   facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra,
                   alertsRepository: AlertsRepositoryT,
@@ -161,11 +162,11 @@ class UserService(userRepo: UserRepositoryAlgebra,
 }
 
 object UserService {
-  def apply[IO[_]](
+  def apply[F[_]: ConcurrentEffect](
                     usersRepository: UserRepositoryAlgebra,
                     credentialsRepository: CredentialsRepositoryAlgebra,
                     facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
                     alertsRepository: AlertsRepositoryT
-                  ): UserService =
+                  ): UserService[F] =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key)
 }

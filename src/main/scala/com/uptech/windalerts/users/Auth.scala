@@ -3,7 +3,7 @@ package com.uptech.windalerts.users
 import java.util.concurrent.TimeUnit
 
 import cats.data.{EitherT, OptionT}
-import cats.effect.IO
+import cats.effect.{Async, ConcurrentEffect, IO}
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
@@ -15,7 +15,7 @@ import io.scalaland.chimney.dsl._
 
 import scala.util.Random
 
-class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
+class Auth[F[_] : ConcurrentEffect](refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
 
   val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
 
@@ -104,6 +104,15 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
   }
 
   def authorizePremiumUsers(user: domain.UserT):EitherT[IO, ValidationError, UserT] = {
+    val either = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+      Right(user)
+    } else {
+      Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} users can perform this action"))
+    }
+    EitherT.fromEither(either)
+  }
+
+  def authorizePremiumUsersX(user: domain.UserT):EitherT[F, ValidationError, UserT] = {
     val either = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {

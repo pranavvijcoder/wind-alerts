@@ -15,6 +15,19 @@ trait AlertsService extends Serializable {
 
 object AlertsService {
 
+  trait ServiceX[F[_]] {
+
+    def getAllForDayAndTimeRange: F[Seq[AlertT]]
+
+    def save(alert: AlertRequest, user: String): F[AlertT]
+
+    def getAllForUser(user: String): F[com.uptech.windalerts.domain.domain.AlertsT]
+
+    def deleteT(requester: String, alertId: String): EitherT[F, WindAlertError, Unit]
+
+    def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) : EitherT[F, WindAlertError, AlertT]
+  }
+
   trait Service {
 
     def getAllForDayAndTimeRange: IO[Seq[AlertT]]
@@ -26,7 +39,6 @@ object AlertsService {
     def deleteT(requester: String, alertId: String): EitherT[IO, WindAlertError, Unit]
 
     def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) : EitherT[IO, WindAlertError, AlertT]
-
   }
 
   class ServiceImpl(repo: AlertsRepositoryT) extends Service {
