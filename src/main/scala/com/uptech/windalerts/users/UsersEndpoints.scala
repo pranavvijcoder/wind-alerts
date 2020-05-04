@@ -314,4 +314,15 @@ class UsersEndpoints(userService: UserService[IO],
     EitherT(IO.fromEither(
       parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x=>UnknownError(x.message)))))
   }
+<<<<<<< Updated upstream
+=======
+
+  private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
+    implicit val backend = HttpURLConnectionBackend()
+
+    EitherT.fromEither(sttp.body(Map("receipt-data" -> receiptData, "password" -> "70f6da1920b848efa5c78b0fba038a7e"))
+      .post(uri"https://sandbox.itunes.apple.com/verifyReceipt")
+      .send().body)
+  }
+>>>>>>> Stashed changes
 }

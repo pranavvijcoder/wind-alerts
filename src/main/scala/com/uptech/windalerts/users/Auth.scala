@@ -4,13 +4,14 @@ import java.util.concurrent.TimeUnit
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.{domain, secrets}
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey, JwtToken}
 import io.circe.parser._
-import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
+import io.netty.handler.ssl.PemPrivateKey
+import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim, JwtHeader}
 import io.scalaland.chimney.dsl._
 
 import scala.util.Random
@@ -65,7 +66,49 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
 
   def createToken(userId: String, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
+<<<<<<< Updated upstream
     val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
+=======
+    val expiry = current / 1000 + TimeUnit.DAYS.toSeconds(expirationInDays)
+    val claims = JwtClaim(
+      expiration = Some(expiry),
+      issuedAt = Some(current / 1000),
+      issuer = Some("wind-alerts.com"),
+      subject = Some(userId)
+    )
+
+    EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
+  }
+
+  def createAppleToken(userId: String, expirationInSeconds: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+
+//    String token = Jwts.builder()
+//      .setHeaderParam(JwsHeader.KEY_ID, KEY_ID)
+//      .setIssuer(TEAM_ID)
+//      .setAudience("https://appleid.apple.com")
+//      .setSubject(CLIENT_ID)
+//      .setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 5)))
+//      .signWith(pKey, SignatureAlgorithm.ES256)
+//      .compact();
+
+    val current = System.currentTimeMillis()
+    val expiry = current / 1000 + TimeUnit.SECONDS.toSeconds(expirationInSeconds)
+    val claims = JwtClaim(
+      expiration = Some(expiry),
+      issuedAt = Some(current / 1000),
+      issuer = Some("W9WH7WV85S"),
+      subject = Some("com.passiondigital.surfsup.ios"),
+      audience = Some(Set("https://appleid.apple.com"))
+    ) + ("accessTokenId", accessTokenId)
+
+    val encoded = Jwt.encode(JwtHeader.apply(JwtAlgorithm.ES256).withKeyId("7F85H38WBC").toJson, claims.toJson, secrets.key(), JwtAlgorithm.ES256)
+    EitherT.right(IO(AccessTokenWithExpiry(encoded, expiry)))
+  }
+
+  def createToken(userId: String, expirationInSeconds: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+    val current = System.currentTimeMillis()
+    val expiry = current / 1000 + TimeUnit.SECONDS.toSeconds(expirationInSeconds)
+>>>>>>> Stashed changes
     val claims = JwtClaim(
       expiration = Some(expiry),
       issuedAt = Some(current / 1000),
